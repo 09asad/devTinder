@@ -14,6 +14,14 @@ app.delete("/user", (req,res) => {
     res.send("Data deleted successfully");
 });
 
+app.get("/student", (req,res) => {
+    res.send(req.query);                // requesting query from POSTMAN GET
+});
+
+app.get("/employee/:empID/:name/:password", (req,res) => {
+    res.send(req.params);                // requesting params from POSTMAN GET
+});
+
 app.use("/hello", (req,res) => {
     res.send("Hello Everyone!");
 });
