@@ -10,7 +10,6 @@ app.use(express.json());       //  built-in middleware used to convert incoming 
 app.post("/signup", async (req,res) => {
     // Creating a new instance of the User model
     const user = new User(req.body);
-
     try{
         await user.save();
         res.send("User added successfully!");
@@ -69,10 +68,12 @@ app.patch("/user", async (req,res) => {
     const userId = req.body.userId;
     const data = req.body;
     try{
-        const user = await User.findByIdAndUpdate(userId, data);
+        const user = await User.findByIdAndUpdate(userId, data, {
+            runValidators: true,
+        });
         res.send("User updated successfully!!");
     } catch(err){
-        res.status(400).send("Something went wrong!!");
+        res.status(400).send("Error :"+ err.message);
     }
 });
 
