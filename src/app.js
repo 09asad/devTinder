@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken");
 const app = express();
 
 app.use(express.json());       //  built-in middleware used to convert incoming json data into js object
-app.use(cookieParser());       // middleware
+app.use(cookieParser());       // middleware used to parse the token/JWT from the cookie
 
 // ADD data into database
 app.post("/signup", async (req,res) => {
@@ -49,9 +49,8 @@ app.post("/login", async (req,res) => {
 
         if(isPasswordValid){
             // Create a JWT token
-            const token = await jwt.sign({ _id : user._id }, "DEV@Tinder$698");
+            const token = await jwt.sign({ _id : user._id }, "DEV@Tinder$698");        // jwt.sign( payload, secretKey)
             console.log(token);
-
             // Add the token to cookie and sends the response back to the user
             res.cookie("token", token);
             res.send("Login Successfull!");
@@ -66,14 +65,14 @@ app.post("/login", async (req,res) => {
 app.get("/profile", async (req,res) => {
     try{
         const cookies = req.cookies;
-
         const {token} = cookies;
         if(!token){
             throw new Error("Invalid token");
         }
 
         // Validate my token
-        const decodeMsg = await jwt.verify(token, "DEV@Tinder$698");
+        const decodeMsg = await jwt.verify(token, "DEV@Tinder$698");    // jwt.verify(token, secretKey) if verified then it return payload
+        // from payload , we can parse all details of the user from the database
 
         const { _id } = decodeMsg;
         console.log("Logged In user is: "+ _id);
