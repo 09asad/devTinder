@@ -1,10 +1,11 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
-const {validateSignUpData} = require("./utils/validation");
+const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middleware/auth");
 
 const app = express();
 
@@ -49,10 +50,16 @@ app.post("/login", async (req,res) => {
 
         if(isPasswordValid){
             // Create a JWT token
-            const token = await jwt.sign({ _id : user._id }, "DEV@Tinder$698");        // jwt.sign( payload, secretKey)
+            const token = await jwt.sign({ _id : user._id }, "DEV@Tinder$698",{          // jwt.sign( payload, secretKey)
+                expiresIn: '7d',
+            });      
             console.log(token);
+
             // Add the token to cookie and sends the response back to the user
-            res.cookie("token", token);
+            res.cookie("token", token, {
+                expires: new Date(Date.now() + 8 * 3600000),    // cookie will be removed after 8 hours
+                httpOnly: true,                                 // cookies only accessible by web browser(HTTP)
+            });
             res.send("Login Successfull!");
         } else{
             throw new Error("Password is incorrect");
@@ -62,29 +69,18 @@ app.post("/login", async (req,res) => {
     }
 });
 
-app.get("/profile", async (req,res) => {
+app.get("/profile",userAuth, async (req,res) => {
     try{
-        const cookies = req.cookies;
-        const {token} = cookies;
-        if(!token){
-            throw new Error("Invalid token");
-        }
-
-        // Validate my token
-        const decodeMsg = await jwt.verify(token, "DEV@Tinder$698");    // jwt.verify(token, secretKey) if verified then it return payload
-        // from payload , we can parse all details of the user from the database
-
-        const { _id } = decodeMsg;
-        console.log("Logged In user is: "+ _id);
-
-        const user = await User.findById(_id);
-        if(!user){
-            throw new Error("User doesn't exist");
-        }
+        const user = req.user;
         res.send(user);
     } catch(err){
         res.status(400).send("ERROR : "+ err.message);
     }
+});
+
+app.post("/sendConnectionRequest", userAuth, (req,res) => {
+    const user = req.user;
+    res.send(user.firstName+" sent the connection request");
 });
 
 // GET user by email
