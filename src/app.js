@@ -1,83 +1,19 @@
 const express = require("express");
-const connectDB = require("./config/database");
-const User = require("./models/user");
-const { validateSignUpData } = require("./utils/validation");
-const bcrypt = require("bcrypt");
-const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
-const { userAuth } = require("./middleware/auth");
-
 const app = express();
+const User = require("./models/user");
+const connectDB = require("./config/database");
+const cookieParser = require("cookie-parser");
 
 app.use(express.json());       //  built-in middleware used to convert incoming json data into js object
 app.use(cookieParser());       // middleware used to parse the token/JWT from the cookie
 
-// ADD data into database
-app.post("/signup", async (req,res) => {
-    try{
-        // Validation of data
-        validateSignUpData(req);
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
 
-        const {firstName, lastName, emailId, password, skills} = req.body;
-
-        // Encrypt the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Creating a new instance of the User model
-        const user = new User({
-            firstName,
-            lastName,
-            emailId,
-            password: hashedPassword,
-            skills,
-        });
-        await user.save();
-        res.send("User added successfully!");
-    } catch(err){
-        res.status(400).send("Error: "+ err.message);
-    }
-});
-
-app.post("/login", async (req,res) => {
-    try{
-        const {emailId, password} = req.body;
-
-        const user = await User.findOne({emailId: emailId});
-        if(!user){
-            throw new Error("Invalid credentials");
-        }
-        const isPasswordValid = await user.validatePassword(password);
-
-        if(isPasswordValid){
-            const token = await user.getJWT();
-
-            // Add the token to cookie and sends the response back to the user
-            res.cookie("token", token, {
-                expires: new Date(Date.now() + 8 * 3600000),    // cookie will be removed after 8 hours
-                httpOnly: true,                                 // cookies only accessible by web browser(HTTP)
-            });
-            res.send("Login Successfull!");
-        } else{
-            throw new Error("Password is incorrect");
-        }
-    } catch(err){
-        res.status(400).send("ERROR : "+ err.message);
-    }
-});
-
-app.get("/profile",userAuth, async (req,res) => {
-    try{
-        const user = req.user;
-        res.send(user);
-    } catch(err){
-        res.status(400).send("ERROR : "+ err.message);
-    }
-});
-
-app.post("/sendConnectionRequest", userAuth, (req,res) => {
-    const user = req.user;
-    res.send(user.firstName+" sent the connection request");
-});
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
 
 // GET user by email
 app.get("/user", async (req,res) => {
