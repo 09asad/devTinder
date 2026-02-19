@@ -10,10 +10,12 @@ app.use(cookieParser());       // middleware used to parse the token/JWT from th
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
+const userRouter = require("./routes/user");
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
+app.use("/", userRouter);
 
 // GET user by email
 app.get("/user", async (req,res) => {

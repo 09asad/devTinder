@@ -17,8 +17,8 @@
 - POST /request/review/rejected/:requestId
 
 ## userRouter
+- GET /user/request/received
 - GET /user/connections
-- GET /user/requests
 - GET /user/feed - GETS you the profiles of other users on platform
 
 STATUS: interested, ignore, accepted, rejected
